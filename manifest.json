@@ -1,0 +1,14 @@
+{
+  "name": "compare-udemy-courses",
+  "version": "1.0",
+  "manifest_version": 3,
+  "description": "Udemy compare",
+  "content_scripts": [
+    {
+      "matches": [ "https://www.linkedin.com/*"],
+      "js": [
+        "main.js"
+      ]
+    }
+  ]
+}
