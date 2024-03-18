@@ -74,6 +74,12 @@ const SELECTORS = {
       selector: "curriculum--content-length",
     },
   ],
+  instructorBio: [
+    {
+      type: "data-purpose",
+      selector: "instructor-bio",
+    },
+  ],
 };
 
 function sleep(ms) {
@@ -85,23 +91,28 @@ function removeSpaces(text = "") {
   return text.replace(/\s+/g, "");
 }
 
-function scrapeBySelector({ type = "", selector }, returnElement = false) {
+function scrapeBySelector(
+  { type = "", selector },
+  returnElement = false,
+  parent = null
+) {
   let data = "";
+  const anchor = parent || document;
   switch (type) {
     case "data-purpose":
-      data = document.querySelector(`[${type}="${selector}"]`);
+      data = anchor.querySelector(`[${type}="${selector}"]`);
       break;
     case "tag":
-      data = document.getElementsByTagName(selector)[0];
+      data = anchor.getElementsByTagName(selector)[0];
       break;
     case "class":
-      data = document.getElementsByClassName(selector)[0];
+      data = anchor.getElementsByClassName(selector)[0];
       break;
     case "id":
-      data = document.getElementById(selector);
+      data = anchor.getElementById(selector);
       break;
     case "partial-class":
-      data = document.querySelector(`[class*="${selector}"]`);
+      data = anchor.querySelector(`[class*="${selector}"]`);
       break;
     default:
       data = "";
@@ -163,6 +174,48 @@ function getLanguage() {
   return language;
 }
 
+function getContentInfo() {
+  const contentInfo = getDataFromSelectors(SELECTORS.contentInfo);
+  const parts = contentInfo.split("•");
+  const { sections, lectures, length } = parts.reduce(
+    (acc, part) => {
+      if (part.includes("sections"))
+        acc.sections = part.replace("sections", "").trim();
+      if (part.includes("lectures"))
+        acc.lectures = part.replace("lectures", "").trim();
+      if (part.includes("length"))
+        acc.length = part.replace("total length", "").trim();
+      return acc;
+    },
+    {
+      sections: 0,
+      lectures: 0,
+      length: 0,
+    }
+  );
+  console.log({ sections, lectures, length });
+  return { sections, lectures, length };
+}
+
+function getInstructorStats() {
+  const bios = document.querySelectorAll("[data-purpose='instructor-bio']");
+  const data = [];
+  for (const bio of bios) {
+    const name = bio
+      .querySelector(`[class*="instructor__title"]`)
+      ?.textContent.trim();
+    const stats = bio.getElementsByTagName("li");
+    const detail = {
+      name,
+      stats: [],
+    };
+    for (const stat of stats) {
+      detail.stats.push(stat.textContent.trim());
+    }
+    data.push(detail);
+  }
+  return data;
+}
 function init() {
   return {
     title: getTitle(),
@@ -173,6 +226,8 @@ function init() {
     instructorName: getInstructorName(),
     lastUpdated: getLastUpdated(),
     language: getLanguage(),
+    contentInfo: getContentInfo(),
+    instructorStats: getInstructorStats(),
   };
 }
 init();
