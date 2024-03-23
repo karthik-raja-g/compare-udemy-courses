@@ -80,6 +80,20 @@ const SELECTORS = {
       selector: "instructor-bio",
     },
   ],
+  accordianTitle:[
+    {
+      type: "tag",
+      selector: "h3",
+    },
+    {
+      type: "partial-class",
+      selector: "accordion-panel-heading"
+    },
+    {
+      type: "partial-class",
+      selector: "section-title"
+    }
+  ]
 };
 
 function sleep(ms) {
@@ -98,6 +112,7 @@ function scrapeBySelector(
 ) {
   let data = "";
   const anchor = parent || document;
+  console.log(parent, 'parent inside')
   switch (type) {
     case "data-purpose":
       data = anchor.querySelector(`[${type}="${selector}"]`);
@@ -121,10 +136,10 @@ function scrapeBySelector(
   return data?.textContent.trim();
 }
 
-function getDataFromSelectors(selectors = []) {
+function getDataFromSelectors(selectors = [], returnElement = false, parent = null) {
   let data = "";
   for (const selector of selectors) {
-    data = scrapeBySelector(selector);
+    data = scrapeBySelector(selector, returnElement, parent);
     if (data) break;
   }
   return data;
@@ -216,6 +231,44 @@ function getInstructorStats() {
   }
   return data;
 }
+
+function extract() {
+  let headingAccordians = document.querySelectorAll('[class*="accordion-panel-module--outer-panel-toggler"]')
+  if(!headingAccordians.length) {
+    headingAccordians = document.querySelectorAll('[class*="accordion-panel-module--panel-toggler"]')
+  }
+  const accordians = []
+  for (const headingAccordian of headingAccordians) {
+    if(headingAccordian.tagName === "DIV") {
+      accordians.push(headingAccordian)
+    }
+  }
+  // console.log(accordians, 'acc')
+  const data = []
+  accordians.forEach(accordian => {
+    const parent = accordian.parentElement
+    console.log({parent}, 'parent')
+    const title = getDataFromSelectors(SELECTORS.accordianTitle,false,parent)
+    // console.log(title, 'title')
+    const sectionListItems = parent.querySelectorAll('li')
+    const sections = []
+    for(const section of sectionListItems) {
+      sections.push(section.textContent.trim())
+    }
+    data.push({title, sections})
+  })
+  // console.log(data)
+  return data;
+}
+
+async function getCourseContent() {
+  const toggleBtn = document.querySelector('[data-purpose="expand-toggle"]');
+  if(toggleBtn?.textContent.toLowerCase().includes("expand")) {
+    toggleBtn.click();
+    await sleep(3000);
+    details = extract();
+  }
+}
 function init() {
   return {
     title: getTitle(),
@@ -228,6 +281,7 @@ function init() {
     language: getLanguage(),
     contentInfo: getContentInfo(),
     instructorStats: getInstructorStats(),
+    content: extract()
   };
 }
 init();

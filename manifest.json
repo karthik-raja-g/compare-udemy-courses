@@ -5,12 +5,21 @@
   "description": "xxx",
   "content_scripts": [
     {
-      "matches": [ "https://www.linkedin.com/*"],
+      "matches": [
+        "https://www.udemy.com/*"
+      ],
       "js": [
         "./content/main.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "*.css"
       ],
-      "css": [
-        "./content/main.css"
+      "matches": [
+        "https://www.udemy.com/*"
       ]
     }
   ]
